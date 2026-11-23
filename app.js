@@ -63,9 +63,8 @@ function shell(body) {
 function actions(next='下一步',previous=true){return `<div class="form-actions">${previous?`<button class="secondary" data-prev>← 上一步</button>`:'<span></span>'}<div class="action-right"><span class="hint hide-mobile">草稿自动保存</span><button class="primary" data-next>${next} <span aria-hidden="true">→</span></button></div></div>`;}
 const illustration=`<div class="illustration" aria-hidden="true"><span class="float-label">一份日常，一份真实</span><svg viewBox="0 0 470 390" fill="none"><ellipse cx="239" cy="215" rx="171" ry="134" fill="#d3ddc8"/><circle cx="230" cy="189" r="149" fill="#fbfcf6"/><circle cx="230" cy="189" r="131" stroke="#e5ebdc" stroke-width="2"/><path d="M116 137c-3-48 50-66 72-28 27-33 65-4 46 34-17 33-60 53-91 41-20-8-28-24-27-47Z" fill="#6d8c57"/><path d="M133 124c12 15 31 36 49 46m-24-71 23 68m37-44-34 44" stroke="#b2c196" stroke-width="3" stroke-linecap="round"/><path d="M108 158c10-28 51-17 48 12 28-19 55 5 39 31-14 22-49 34-71 17-20-15-25-39-16-60Z" fill="#93a976"/><path d="m126 165 30 37m-9-51 9 48" stroke="#ccd7b7" stroke-width="3" stroke-linecap="round"/><circle cx="273" cy="134" r="41" fill="#d47a53"/><circle cx="279" cy="133" r="30" fill="#dd8c63"/><path d="m271 94 8-15m-6 17c10-14 25-11 31-6-7 10-21 13-31 6Z" fill="#70884f"/><ellipse cx="285" cy="218" rx="43" ry="31" transform="rotate(-25 285 218)" fill="#e2bb65"/><path d="m254 218 46-18m-36 30 44-18" stroke="#efd591" stroke-width="4" stroke-linecap="round"/><path d="M185 238c-15-31 27-54 43-28 7 11 14 27 10 42-7 25-43 26-53-14Z" fill="#e7ddbf"/><path d="M195 226c-12-17 12-34 22-15" stroke="#f5efdf" stroke-width="4" stroke-linecap="round"/><ellipse cx="230" cy="285" rx="34" ry="9" fill="#dae2cd"/><path d="M365 83v227m-12-227v58c0 19 26 19 26 0V83M365 83v64" stroke="#8b9b78" stroke-width="5" stroke-linecap="round"/><path d="M70 97v202m0-202c-17 0-22 64 0 64" stroke="#8b9b78" stroke-width="5" stroke-linecap="round"/><path d="m330 57 8 9m-2-26 3 11m11 6 11-1" stroke="#a1b38c" stroke-width="2" stroke-linecap="round"/><circle cx="115" cy="296" r="3" fill="#a5b592"/><circle cx="125" cy="305" r="2" fill="#a5b592"/></svg></div>`;
 function welcome(){return `<div class="welcome"><section class="hero"><div><span class="eyebrow">EVERYDAY CHOICES, EVERYDAY FOOD</span><h1>从一日三餐，<br>了解<em>生鲜消费。</em></h1><p>你在哪里买菜，又如何安排每天的饮食？<br>我们希望从真实的日常选择中，了解新型流通方式与生鲜食品消费、膳食结构的关系。</p><div class="hero-buttons"><button class="primary" data-go="1">${S.purchased?'继续填写':'开始填写'} <span aria-hidden="true">↗</span></button></div><div class="hero-meta"><span>不收集姓名与联系方式</span><span>可随时返回修改</span><span>支持手机填写</span></div></div>${illustration}</section><section class="welcome-grid"><div class="welcome-info"><span class="num">01</span><h3>回忆最近30天的购买</h3><p>按品类选择支出区间，记录实际使用的渠道。</p></div><div class="welcome-info"><span class="num">02</span><h3>回忆最近7天的饮食</h3><p>根据实际摄入量作答，包括在外就餐。</p></div><div class="welcome-info"><span class="num">03</span><h3>有机与绿色食品</h3><p>最后回答有关认证食品的题目。</p></div></section><p class="welcome-note">这是一份学术问卷的公开试填版，无需登录。答案仅保留在当前标签页，关闭后清除。</p></div>`;}
-const occupations=['大学在读（本专科等）','研究生及以上在读','企业员工','机关/事业单位工作人员','个体经营者/创业者','自由职业者','农业生产经营者','目前无业/待业','离退休人员','其他','不便透露'];
-function profile(){return shell(card('作答前，请先确认',`<div class="question"><p class="hint">问卷用于了解购买渠道与生鲜消费、日常饮食之间的关系。参与自愿，你可以随时停止。试填答案仅保留在当前标签页。</p><label class="small-check"><input type="checkbox" data-field="consent" ${S.consent?'checked':''}>我已阅读说明，自愿参与。</label></div><div class="question">${label('A0','过去30天，你是否亲自购买过生鲜食品？')}${choices('purchased',[['yes','是，购买过'],['no','否，没有购买过']],false,true)}<p class="hint">这里的生鲜指新鲜蔬菜、水果、生肉禽、水产海鲜与鲜蛋；不含熟食、冷冻速食、粮油及常温包装食品。</p></div>`)+ (S.purchased==='yes'?card('关于你',`<div class="question">${label('A1','你目前的常住地是？')}<div class="fields three">${input('profile.province','省 / 直辖市')}${input('profile.city','市 / 州')}${input('profile.district','区 / 县（可不填）')}</div></div><div class="fields">${field('A2','你的性别','profile.gender',['男','女','其他 / 不便回答'])}${field('A3','你的年龄','profile.age',['18岁以下','18—24岁','25—34岁','35—44岁','45—54岁','55—64岁','65岁及以上'])}${field('A4','你的职业','profile.occupation',occupations)}${field('A5','最高受教育程度（含在读）','profile.education',['初中及以下','高中 / 中专','大专','本科','硕士及以上'])}</div>${field('A6','个人每月可支配收入','profile.personalIncome',['无个人收入 / 主要由家庭支持',['3000元以下','有收入，低于3000元'],'3000—4999元','5000—7999元','8000—11999元','12000元及以上','不便回答'])}`):'')+actions(S.purchased==='no'?'结束筛选':'下一步',false));}
-function family(){return shell(card('家庭采购与共同生活',`<div class="fields">${field('A7','你在家庭生鲜采购中的角色','profile.role',['主要由我购买','我与其他成员共同购买','主要由其他成员购买，我偶尔参与'])}${field('A10','与你共同居住、共用饮食开支的人数（含本人）','profile.householdSize',['1人','2人','3人','4人','5人','6人及以上'])}${field('A8','目前的居住结构','profile.householdStructure',['独居','与配偶 / 伴侣同住','与配偶 / 伴侣及子女同住','仅与父母或其他长辈同住','仅与子女同住','三代及以上同住','与室友等非亲属同住','其他'])}${field('A11','家庭每月可支配收入','profile.householdIncome',['5000元以下','5000—9999元','10000—14999元','15000—19999元','20000—29999元','30000元及以上',['不清楚 / 不便回答','不便回答']])}</div><div class="question">${label('A9','家中是否有需要特别考虑饮食的成员？')}${choices('profile.special',[['child','0—6岁婴幼儿'],['teen','7—17岁未成年人'],['older','60岁及以上老人'],['chronic','需控制饮食的慢性病患者'],['pregnancy','孕妇 / 哺乳期女性'],['none','没有上述成员'],['private','不便回答']],true)}</div>`)+card('居住地的购物条件',field('A12','常住地类型','profile.areaType',['城市市区','县城或县级市城区','乡镇','农村村庄'])+field('A13','居住地可使用的线上生鲜服务','profile.onlineAccess',['仅配送到家','仅社区自提','配送到家和社区自提都可以','两种均不可使用',['不清楚','未确认当地是否提供这些服务']])+field('A14','步行到最近农贸市场通常需要多久？','profile.marketDistance',['10分钟及以内','11—20分钟','21—30分钟','30分钟以上','附近没有农贸市场']))+actions());}
+function profile(){return shell(card('作答前，请先确认',`<div class="question"><p class="hint">问卷用于了解购买渠道与生鲜消费、日常饮食之间的关系。参与自愿，你可以随时停止。试填答案仅保留在当前标签页。</p><label class="small-check"><input type="checkbox" data-field="consent" ${S.consent?'checked':''}>我已阅读说明，自愿参与。</label></div><div class="question">${label('A0','过去30天，你是否亲自购买过生鲜食品？')}${choices('purchased',[['yes','是，购买过'],['no','否，没有购买过']],false,true)}<p class="hint">这里的生鲜指新鲜蔬菜、水果、生肉禽、水产海鲜与鲜蛋；不含熟食、冷冻速食、粮油及常温包装食品。</p></div>`)+ (S.purchased==='yes'?card('关于你',`<div class="question">${label('A1','你目前的常住地是？')}<div class="fields three">${input('profile.province','省 / 直辖市')}${input('profile.city','市 / 州')}${input('profile.district','区 / 县（可不填）')}</div></div><div class="fields">${field('A2','你的性别','profile.gender',['男','女','其他 / 不便回答'])}${field('A3','你的年龄','profile.age',['18岁以下','18—24岁','25—34岁','35—44岁','45—54岁','55—64岁','65岁及以上'])}${field('A5','最高受教育程度（含在读）','profile.education',['初中及以下','高中 / 中专','大专','本科','硕士及以上'])}</div>`):'')+actions(S.purchased==='no'?'结束筛选':'下一步',false));}
+function family(){return shell(card('家庭采购与共同生活',`<div class="fields">${field('A7','你在家庭生鲜采购中的角色','profile.role',['主要由我购买','我与其他成员共同购买','主要由其他成员购买，我偶尔参与'])}${field('A10','与你共同居住、共用饮食开支的人数（含本人）','profile.householdSize',['1人','2人','3人','4人','5人','6人及以上'])}${field('A11','家庭每月可支配收入','profile.householdIncome',['5000元以下','5000—9999元','10000—14999元','15000—19999元','20000—29999元','30000元及以上',['不清楚 / 不便回答','不便回答']])}</div><div class="question">${label('A9','家中是否有需要特别考虑饮食的成员？')}${choices('profile.special',[['child','0—6岁婴幼儿'],['teen','7—17岁未成年人'],['older','60岁及以上老人'],['chronic','需控制饮食的慢性病患者'],['pregnancy','孕妇 / 哺乳期女性'],['none','没有上述成员'],['private','不便回答']],true)}</div>`)+card('居住地的购物条件',field('A12','常住地类型','profile.areaType',['城市市区','县城或县级市城区','乡镇','农村村庄'])+field('A13','居住地可使用的线上生鲜服务','profile.onlineAccess',['仅配送到家','仅社区自提','配送到家和社区自提都可以','两种均不可使用',['不清楚','未确认当地是否提供这些服务']])+field('A14','步行到最近农贸市场通常需要多久？','profile.marketDistance',['10分钟及以内','11—20分钟','21—30分钟','30分钟以上','附近没有农贸市场']))+actions());}
 const monthly = Object.entries(L.monthly);
 const spendOptions = category => L.spendBands(category).map(({ id, label }) => [id, label]);
 
@@ -189,17 +188,11 @@ function shoppingCosts() {
 }
 const ranges = SurveySchema.ranges;
 const foods = [
-  ['C1','veg','🥬','蔬菜','按烹饪前重量，薯类另填。'],
+  ['C1','veg','🥬','蔬菜','按烹饪前重量估算，土豆等薯类不计入。'],
   ['C2','fruit','🍎','新鲜水果','计入整果和切块的新鲜水果。'],
   ['C3','meat','🍖','畜禽肉','一掌心肉片约50克。'],
   ['C4','fish','🐟','水产品','按烹饪前可食重量，去骨去壳。'],
   ['C5','eggsDaily','🥚','蛋类','含菜里的蛋，按普通鸡蛋大小折算。平均两天吃一个，就填0.5。'],
-  ['C6','milk','🥛','奶及奶制品','折算为液态奶量。'],
-  ['C7a','grain','🍚','谷类和杂豆合计','按干重，含米面、玉米、燕麦、红绿豆。'],
-  ['C7b','whole','🌾','其中全谷物和杂豆','这一项已计入 C7a 的合计。'],
-  ['C8','tuber','🍠','薯类','如土豆、红薯，按烹饪前可食重量。'],
-  ['C9','soy','🫘','大豆与豆制品','可按下方的说明估算份量。'],
-  ['C10','nuts','🥜','坚果','按去壳后的可食重量。'],
 ];
 
 function diet() {
@@ -213,12 +206,8 @@ function diet() {
         ? input('diet.eggsDaily','例如 0.5','number','个/天','diet-eggsDaily')
         : select('diet.'+id,ranges[id],'请选择估算量',false,'diet-'+id)}
     </div>`).join('');
-  return shell(notice('请估算你本人过去7天平均每天吃了多少。在家、餐馆、外卖和食堂吃到的都计入。把没吃的日子也算在7天内，整周没吃就选0或填0。克数和毫升数可约到整数。')
-    + card('过去7天，平均每天吃了多少？',rows + `
-      <details class="portion-guide">
-        <summary class="hint">如何估算一份豆制品？</summary>
-        <p class="hint">1份约相当于干大豆25克、北豆腐100克、南豆腐150克、豆腐干50克，或按1份黄豆加约8份水制作的豆浆400克。</p>
-      </details>`)
+  return shell(notice('请估算你本人过去7天平均每天吃了多少。在家、餐馆、外卖和食堂吃到的都计入。把没吃的日子也算在7天内，整周没吃就选0或填0。克数可约到整数。')
+    + card('过去7天，你平均每天吃了多少这五类食物？',rows)
     + card('其他饮食情况',`
       ${field('C11','过去7天，在餐馆、外卖或食堂解决的正餐有几顿？','diet.outsideMeals',['0顿','1—3顿','4—7顿','8—14顿','15—21顿'])}
       ${field('C12','过去7天的饮食与平时相比，最符合哪种情况？','diet.typical',['基本一致','因生病、节食等明显减少','因聚餐、节假日等明显增加','因出差、旅行等结构明显不同','其他情况'])}
@@ -421,5 +410,6 @@ clean();
 if (S.step === 7 || S.step === 8 || (S.step === 9 && S.purchased !== 'no' && !S.organicCompleted)) {
   go(8, false);
 } else {
+  if (saved?.version === 'fresh-survey-2026-v3' || saved?.version === 'fresh-survey-2026-v4') save();
   render();
 }

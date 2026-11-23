@@ -46,5 +46,3 @@
 .channel-followup label { font-size: 13px; }
 .channel-cost + .channel-cost { border-top: 1px solid var(--line); margin-top: 8px; }
 .channel-cost h3 { margin: 14px 0 8px; font-size: 15px; }
-.portion-guide { margin-top: 20px; }
-.portion-guide summary { cursor: pointer; }

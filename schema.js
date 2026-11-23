@@ -13,23 +13,22 @@
   };
   const profileLabels = {
     province: '省 / 直辖市', city: '市 / 州', district: '区 / 县',
-    gender: '性别', age: '年龄', occupation: '职业', education: '教育程度',
-    personalIncome: '个人可支配收入', role: '家庭采购角色',
-    householdSize: '家庭共同生活人数', householdStructure: '居住结构',
+    gender: '性别', age: '年龄', education: '教育程度',
+    role: '家庭采购角色',
+    householdSize: '家庭共同生活人数',
     householdIncome: '家庭可支配收入', areaType: '常住地类型',
     onlineAccess: '线上服务可及性', marketDistance: '农贸市场步行距离',
     special: '家庭特殊饮食需求成员',
   };
   const dietLabels = {
-    veg: '蔬菜', fruit: '新鲜水果', meat: '畜禽肉', fish: '水产品', milk: '奶及奶制品',
-    grain: '谷类、全谷物及杂豆合计', whole: '其中全谷物和杂豆', tuber: '薯类',
-    soy: '大豆与豆制品', nuts: '坚果', eggs_per_day_estimate: '蛋类（个/天）',
+    veg: '蔬菜', fruit: '新鲜水果', meat: '畜禽肉', fish: '水产品',
+    eggs_per_day_estimate: '蛋类（个/天）',
     outsideMeals: '在外就餐顿数', typical: '近7天饮食代表性',
     health: '自评健康', special: '本人特殊饮食情况',
   };
   const familySpecial = {child:'0—6岁婴幼儿',teen:'7—17岁未成年人',older:'60岁及以上老人',chronic:'需控制饮食的慢性病患者',pregnancy:'孕妇 / 哺乳期女性',none:'没有上述成员',private:'不便回答'};
   const dietSpecial = {none:'无',disease:'因疾病或医生建议控制饮食',weight:'主动减重或控制体重',vegetarian:'素食或其他长期特殊饮食',pregnancy:'妊娠期或哺乳期',other:'其他',private:'不便回答'};
-  const ranges={veg:[['zero','基本不吃（0克）'],['low','大于0、不足100克'],['low2','100—199克'],['low3','200—299克'],['middle','300—399克'],['middle2','400—499克'],['high','500克及以上']],fruit:[['zero','基本不吃（0克）'],['low','大于0、不足100克'],['low2','100—199克'],['middle','200—299克'],['middle2','300—350克'],['upper','351—399克'],['upper2','400—499克'],['high','500克及以上']],meat:[['zero','基本不吃（0克）'],['low','大于0、不足40克'],['low2','40—49克'],['middle','50—75克'],['upper','76—100克'],['upper2','101—199克'],['high','200克及以上']],fish:[['zero','基本不吃（0克）'],['low','大于0、不足40克'],['low2','40—49克'],['middle','50—75克'],['upper','76—100克'],['upper2','101—199克'],['high','200克及以上']],milk:[['zero','基本不喝（0毫升）'],['low','大于0、不足100毫升'],['low2','100—199毫升'],['low3','200—299毫升'],['middle','300—399毫升'],['middle2','400—500毫升'],['high','超过500毫升']],grain:[['zero','基本不吃（0克）'],['low','大于0、不足100克'],['low2','100—199克'],['middle','200—300克'],['middle2','301—399克'],['upper','400—499克'],['high','500克及以上']],whole:[['zero','基本不吃（0克）'],['low','大于0、不足50克'],['middle','50—150克'],['high','超过150克']],tuber:[['zero','基本不吃（0克）'],['low','大于0、不足50克'],['middle','50—100克'],['upper','101—199克'],['high','200克及以上']],soy:[['zero','没有吃'],['low','平均每天大于0、不足半份'],['middle','平均每天半份至1份（不含1份）'],['one','平均每天1份至1.5份（含）'],['high','平均每天超过1.5份']],nuts:[['zero','基本不吃（0克）'],['low','大于0、不足10克'],['middle','10—15克'],['upper','超过15克、至35克'],['high','超过35克']]};
+  const ranges={veg:[['zero','基本不吃（0克）'],['low','大于0、不足100克'],['low2','100—199克'],['low3','200—299克'],['middle','300—399克'],['middle2','400—499克'],['high','500克及以上']],fruit:[['zero','基本不吃（0克）'],['low','大于0、不足100克'],['low2','100—199克'],['middle','200—299克'],['middle2','300—350克'],['upper','351—399克'],['upper2','400—499克'],['high','500克及以上']],meat:[['zero','基本不吃（0克）'],['low','大于0、不足40克'],['low2','40—49克'],['middle','50—75克'],['upper','76—100克'],['upper2','101—199克'],['high','200克及以上']],fish:[['zero','基本不吃（0克）'],['low','大于0、不足40克'],['low2','40—49克'],['middle','50—75克'],['upper','76—100克'],['upper2','101—199克'],['high','200克及以上']]};
 
 
   const obj = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};

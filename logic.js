@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
 
-  const version = 'fresh-survey-2026-v4';
+  const version = 'fresh-survey-2026-v5';
   const channels = [
     {id:'market',name:'农贸市场',kind:'线下',icon:'▦',desc:'到菜市场、农贸集市现场购买。'},
     {id:'supermarket',name:'大型商超',kind:'线下',icon:'▤',desc:'到大型超市或综合生鲜超市现场购买。'},
@@ -81,8 +81,17 @@
       && Math.abs(allocationSum(shares) - 100) < 0.001;
   }
 
+  function withoutRetiredAnswers(saved) {
+    const profile = { ...saved.profile };
+    const diet = { ...saved.diet };
+    for (const key of ['occupation','personalIncome','householdStructure']) delete profile[key];
+    for (const key of ['milk','grain','whole','tuber','soy','nuts']) delete diet[key];
+    return { ...saved, version, profile, diet };
+  }
+
   function migrateDraft(saved) {
     if (saved?.version === version) return saved;
+    if (saved?.version === 'fresh-survey-2026-v4') return withoutRetiredAnswers(saved);
     const next = blank();
     if (saved?.version !== 'fresh-survey-2026-v3') return next;
 
@@ -100,6 +109,8 @@
     for (const key of ['step','consent','purchased','profile','channels','otherChannel','categories','frequency','shares','detailChannels','scales','diet','startedAt']) {
       if (saved[key] !== undefined) next[key] = saved[key];
     }
+    next.profile = { ...next.profile };
+    next.diet = { ...next.diet };
     if (next.profile.marketDistance === '不清楚') delete next.profile.marketDistance;
     if (next.diet.typical === '基本和平时一致') next.diet.typical = '基本一致';
     delete next.scales.time3;
@@ -114,7 +125,7 @@
       referenceCategory:oldOrganic.referenceCategory ?? '', observedPremium:oldOrganic.observedPremium ?? '',
       reasons:oldOrganic.reasons ?? [],
     });
-    return next;
+    return withoutRetiredAnswers(next);
   }
 
   function validate(s, step) {
@@ -141,13 +152,12 @@
       if (!s.consent) add('consent', '请阅读说明并确认自愿参与。');
       need(s.purchased, 'purchased', '过去30天是否亲自购买过生鲜食品');
       if (s.purchased === 'yes') requiredFields(s.profile, {
-        province:'常住省份', city:'常住城市', gender:'性别', age:'年龄', occupation:'职业',
-        education:'受教育程度', personalIncome:'个人月可支配收入',
+        province:'常住省份', city:'常住城市', gender:'性别', age:'年龄', education:'受教育程度',
       });
     }
     if (step === 2) {
       requiredFields(s.profile, {
-        role:'家庭采购角色', householdStructure:'居住结构', householdSize:'共同居住且共用饮食开支人数',
+        role:'家庭采购角色', householdSize:'共同居住且共用饮食开支人数',
         householdIncome:'家庭月可支配收入', areaType:'常住地类型', onlineAccess:'线上服务可及情况', marketDistance:'农贸市场步行时间',
       });
       if (!s.profile.special?.length) add('special', '请选择家庭特殊饮食需求成员。没有时请选择「没有上述成员」。');
@@ -188,15 +198,11 @@
     }
     if (step === 6) {
       requiredFields(s.diet, {
-        veg:'蔬菜摄入量', fruit:'水果摄入量', meat:'畜禽肉摄入量', fish:'水产摄入量', milk:'奶类摄入量',
-        grain:'谷类摄入量', whole:'全谷物和杂豆摄入量', tuber:'薯类摄入量', soy:'大豆及豆制品摄入份量',
-        nuts:'坚果摄入量', outsideMeals:'在外就餐顿数', typical:'近7天饮食代表性', health:'自评健康',
+        veg:'蔬菜摄入量', fruit:'水果摄入量', meat:'畜禽肉摄入量', fish:'水产摄入量',
+        outsideMeals:'在外就餐顿数', typical:'近7天饮食代表性', health:'自评健康',
       });
       if (num(s.diet.eggsDaily) === null || num(s.diet.eggsDaily) < 0) add('eggsDaily', '请填写平均每天吃几个蛋。');
       if (!s.diet.special?.length) add('dietSpecial', '请选择个人特殊饮食情况。没有时请选择「无」。');
-      if (s.diet.grain === 'zero' && s.diet.whole && s.diet.whole !== 'zero') {
-        add('whole', '全谷物和杂豆属于谷类总量的一部分，请核对两题。');
-      }
     }
     if (step === 8) {
       const organic = s.organic;
