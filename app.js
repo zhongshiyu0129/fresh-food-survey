@@ -24,17 +24,25 @@ function input(p,placeholder='',type='text',unit='',id='',disabled=false){return
 function choices(p,arr,multi=false,refresh=false,columns=''){return `<div class="choice-grid ${columns}">${opts(arr).map(([v,t])=>`<label class="choice"><input type="${multi?'checkbox':'radio'}" ${multi?`data-array="${p}"`:`data-field="${p}" name="${p}"`} value="${esc(v)}" ${multi?(get(p)||[]).includes(v)?'checked':'':String(get(p)??'')===String(v)?'checked':''} ${refresh?'data-refresh="1"':''}><span>${esc(t)}</span></label>`).join('')}</div>`;}
 function notice(t,type=''){return `<div class="notice ${type}"><span class="notice-icon" aria-hidden="true">${type==='amber'?'◌':'ⓘ'}</span><div>${t}</div></div>`;}
 function card(title,body,small=''){return `<section class="form-card">${title?`<div class="card-head"><h2>${title}</h2>${small?`<small>${small}</small>`:''}</div>`:''}${body}</section>`;}
-const steps=['','个人基本情况','家庭与生活环境','购买渠道与品类','品类与渠道分配','最近一单与感受','近7天的饮食','核对回答','有机与绿色食品'];
-const subheads={1:'先从你的基本情况开始。',2:'帮助我们理解不同家庭的采购与饮食背景。',3:'请选择实际使用过的渠道，不限两个。',4:'按品类回忆支出，再分配到实际购买渠道。',5:'月度次数简要填写，最近一单最多回忆两个渠道。',6:'包括在家、餐馆、外卖和食堂中吃到的食物。',7:'检查一下，确认你的回答表达了真实情况。',8:'请回答以下与你的情况相关的题目。'};
+const steps = [
+  { id: 1, title: '个人基本情况', description: '先从你的基本情况开始。' },
+  { id: 2, title: '家庭与生活环境', description: '帮助我们理解不同家庭的采购与饮食背景。' },
+  { id: 3, title: '购买渠道与品类', description: '请选择实际使用过的渠道，不限两个。' },
+  { id: 4, title: '品类与渠道分配', description: '按品类回忆支出，再分配到实际购买渠道。' },
+  { id: 5, title: '最近一单与感受', description: '月度次数简要填写，最近一单最多回忆两个渠道。' },
+  { id: 6, title: '近7天的饮食', description: '包括在家、餐馆、外卖和食堂中吃到的食物。' },
+  { id: 8, title: '有机与绿色食品', description: '请回答以下与你的情况相关的题目。' },
+];
 function errorBox(){return errors.length?`<div class="notice error error-summary" role="alert" tabindex="-1"><div><strong>还有${errors.length}处需要核对</strong><ul>${errors.map(e=>`<li>${esc(e.msg)}</li>`).join('')}</ul></div></div>`:'';}
 function shell(body) {
-  const step = S.step;
-  const total = steps.length - 1;
-  const navigation = steps.slice(1).map((title, index) => {
-    const page = index + 1;
-    const state = step === page ? 'active' : step > page ? 'done' : '';
-    const number = step > page ? '✓' : String(page).padStart(2, '0');
-    return `<button class="step-link ${state}" data-go="${page}" ${step === page ? 'aria-current="step"' : ''}><span class="step-number">${number}</span>${title}</button>`;
+  const currentIndex = steps.findIndex(({ id }) => id === S.step);
+  const { title, description } = steps[currentIndex];
+  const page = currentIndex + 1;
+  const total = steps.length;
+  const navigation = steps.map(({ id, title }, index) => {
+    const state = index === currentIndex ? 'active' : index < currentIndex ? 'done' : '';
+    const number = index < currentIndex ? '✓' : String(index + 1).padStart(2, '0');
+    return `<button class="step-link ${state}" data-go="${id}" ${index === currentIndex ? 'aria-current="step"' : ''}><span class="step-number">${number}</span>${title}</button>`;
   }).join('');
   return `<div class="survey-layout">
     <aside class="rail">
@@ -45,9 +53,9 @@ function shell(body) {
     </aside>
     <div class="form-main">
       <header class="form-header">
-        <div class="section-meta"><span>FRESH FOOD STUDY · 生鲜消费研究</span><span>${String(step).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span></div>
-        <div class="progress"><span style="width:${step / total * 100}%"></span></div>
-        <h1>${steps[step]}</h1><p>${subheads[step]}</p>
+        <div class="section-meta"><span>FRESH FOOD STUDY · 生鲜消费研究</span><span>${String(page).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span></div>
+        <div class="progress"><span style="width:${page / total * 100}%"></span></div>
+        <h1>${title}</h1><p>${description}</p>
       </header>
       ${errorBox()}${body}
     </div>
@@ -73,14 +81,13 @@ const foods=[['veg','🥬','蔬菜','按烹饪前重量估算，不包括土豆�
 function dailyEggRow() {
   return `<div class="food-row"><label for="diet-eggs-daily"><span class="food-name"><span class="food-icon" aria-hidden="true">🥚</span><span class="qcode">C5</span>平均每天吃几个蛋？${req}</span><small>包括菜肴中的蛋，按普通鸡蛋大小折算。可以填小数，例如平均两天吃一个，就填0.5。</small></label><div>${input('diet.eggsDaily','例如 0.5','number','个/天','diet-eggs-daily')}</div></div>`;
 }
-function diet(){return shell(notice('以下均为<strong>你本人</strong>过去7天的饮食。请估算这7天的日均摄入量，把没吃的日子也算进去。整周没吃请填0或选0。')+card('过去7天，平均每天吃了多少？',foods.map(([id,icon,n,h])=>`<div class="food-row"><label for="diet-${id}"><span class="food-name"><span class="food-icon" aria-hidden="true">${icon}</span>${n}${req}</span><small>${h}</small></label>${select('diet.'+id,ranges[id],'请选择估算量',false,'diet-'+id)}</div>`).join('')+dailyEggRow()+`<details style="margin-top:20px"><summary class="hint" style="cursor:pointer">如何估算一份豆制品？</summary><p class="hint">按交换份估算，1份约为干大豆25克，或北豆腐100克、南豆腐150克、豆腐干50克，或按约1份黄豆加8份水制作的豆浆400克。</p></details>`)+card('再补充几项饮食情况',`${field('C10','过去7天，有多少顿饭在餐馆、外卖或食堂解决？','diet.outsideMeals',['0顿','1—3顿','4—7顿','8—14顿','15—21顿'],'<p class="hint">包括早、中、晚餐，每天最多计3顿。</p>')}${field('C11','过去7天的饮食与平时相比，是否具有代表性？','diet.typical',['基本和平时一致','因生病、节食等明显减少','因聚餐、节假日等明显增加','因出差、旅行等结构明显不同','其他情况'])}${field('C12','与同龄人相比，你目前的健康状况是？','diet.health',['非常不好','比较不好','一般','比较好','非常好','不便回答'])}<div class="question">${label('C13','你本人是否存在需要特别调整饮食的情况？')}${choices('diet.special',[['none','无'],['disease','因疾病或医生建议控制饮食'],['weight','主动减重或控制体重'],['vegetarian','素食或其他长期特殊饮食'],['pregnancy','妊娠期或哺乳期'],['other','其他'],['private','不便回答']],true)}</div>`)+actions('核对回答'));}
-function review(){const d=L.derived(S),all=allErrors();return shell(notice('请核对回答，然后继续填写有机与绿色食品部分。')+card('',`<div class="review-block"><h2>采购范围</h2><button class="text-button" data-go="3">修改 →</button></div><dl class="review-list"><div><dt>实际购买渠道</dt><dd>${chosen().map(h=>h.name).join('、')||'尚未选择'}</dd></div><div><dt>实际购买品类</dt><dd>${bought().map(c=>c.name).join('、')||'尚未选择'}</dd></div><div><dt>本人采购支出合计</dt><dd>${d.total===null?'待填写完整':d.total.toFixed(1)+'元 / 30天'}</dd></div><div><dt>详细回忆的渠道</dt><dd>${S.detailChannels.map(nameH).map(esc).join('、')||'尚未选择'}</dd></div></dl>`)+card('',`<div class="review-block"><h2>品类 × 渠道数据</h2><button class="text-button" data-go="4">修改 →</button></div><div class="table-scroll"><table class="mini-table"><thead><tr><th>食品品类</th><th class="numeric">支出（元）</th>${chosen().map(h=>`<th class="numeric no-wrap">${h.name}</th>`).join('')}</tr></thead><tbody>${bought().map(c=>`<tr><td class="no-wrap">${c.name}</td><td class="numeric">${L.knownAmount(S,c.id)?esc(S.expenses[c.id]):'未填'}</td>${chosen().map(h=>`<td class="numeric">${L.share(S,c.id,h.id)+'%'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${derivedTable(d)}`)+card('',`<div class="review-block"><h2>饮食回忆</h2><button class="text-button" data-go="6">修改 →</button></div><dl class="review-list">${foods.map(([id,icon,n])=>`<div><dt>${n}</dt><dd>${esc(ranges[id].find(x=>x[0]===S.diet[id])?.[1]||'未填')}</dd></div>`).join('')}<div><dt>平均每天吃的蛋</dt><dd>${L.num(S.diet.eggsDaily)!==null?esc(S.diet.eggsDaily)+' 个/天':'未填'}</dd></div></dl>`)+`${all.length?notice(`还有<strong>${all.length}处必填或一致性问题</strong>。完成前会引导你回到第一个需要核对的页面。`,'amber'):notice('主问卷已填写完整，可以进入最后一部分。')}`+`<div class="form-actions"><button class="secondary" data-go="6">← 返回修改</button><button class="primary" data-complete>继续填写有机绿色部分 <span aria-hidden="true">→</span></button></div>`);}
+function diet(){return shell(notice('以下均为<strong>你本人</strong>过去7天的饮食。请估算这7天的日均摄入量，把没吃的日子也算进去。整周没吃请填0或选0。')+card('过去7天，平均每天吃了多少？',foods.map(([id,icon,n,h])=>`<div class="food-row"><label for="diet-${id}"><span class="food-name"><span class="food-icon" aria-hidden="true">${icon}</span>${n}${req}</span><small>${h}</small></label>${select('diet.'+id,ranges[id],'请选择估算量',false,'diet-'+id)}</div>`).join('')+dailyEggRow()+`<details style="margin-top:20px"><summary class="hint" style="cursor:pointer">如何估算一份豆制品？</summary><p class="hint">按交换份估算，1份约为干大豆25克，或北豆腐100克、南豆腐150克、豆腐干50克，或按约1份黄豆加8份水制作的豆浆400克。</p></details>`)+card('再补充几项饮食情况',`${field('C10','过去7天，有多少顿饭在餐馆、外卖或食堂解决？','diet.outsideMeals',['0顿','1—3顿','4—7顿','8—14顿','15—21顿'],'<p class="hint">包括早、中、晚餐，每天最多计3顿。</p>')}${field('C11','过去7天的饮食与平时相比，是否具有代表性？','diet.typical',['基本和平时一致','因生病、节食等明显减少','因聚餐、节假日等明显增加','因出差、旅行等结构明显不同','其他情况'])}${field('C12','与同龄人相比，你目前的健康状况是？','diet.health',['非常不好','比较不好','一般','比较好','非常好','不便回答'])}<div class="question">${label('C13','你本人是否存在需要特别调整饮食的情况？')}${choices('diet.special',[['none','无'],['disease','因疾病或医生建议控制饮食'],['weight','主动减重或控制体重'],['vegetarian','素食或其他长期特殊饮食'],['pregnancy','妊娠期或哺乳期'],['other','其他'],['private','不便回答']],true)}</div>`)+actions('进入有机与绿色食品'));}
 const premium=[['zero','不接受 / 没有加价（0%）'],['0to10','大于0%、至10%'],['10to20','超过10%、至20%'],['20to50','超过20%、至50%'],['50to100','超过50%、至100%'],['over100','超过100%']];
 function organic(){const o=S.organic;let body=notice('本部分为必答。请只考虑前面五类生鲜中，包装或销售说明明确带有“有机”或“绿色食品”认证标识的产品。所填金额已包含在前面的生鲜支出中。')+card('认证食品的了解与购买',`<div class="question">${label('G1','你是否知道有机或绿色食品认证？')}${choices('organic.aware',[['yes','知道'],['no','不知道']],false,true)}</div>${o.aware==='yes'?`<div class="question">${label('G2','过去30天，你是否购买过这类认证生鲜食品？')}${choices('organic.bought',[['yes','购买过'],['no','未购买'],['unknown','无法确认']],false,true)}</div>`:''}`);
  if(o.aware==='yes'&&o.bought==='yes')body+=card('回忆过去30天的实际购买',field('G3','购买认证生鲜食品的频率','organic.frequency',freq)+`<div class="question">${label('G4','其中，认证生鲜食品实际花了多少？')}${input('organic.amount','前面五类生鲜支出中的一部分','number','元','organic-amount')}</div><div class="question">${label('G5','这部分认证生鲜支出，分别花在哪些渠道？')}${S.channels.length===1?'<div class="auto-note">只使用一个渠道，占比自动记为100%。</div>':chosen().map(h=>`<div class="matrix-row"><label for="organic-share-${h.id}">${h.name}</label>${input('organic.shares.'+h.id,'0','number','%','organic-share-'+h.id)}</div>`).join('')}<div class="sum-bar" id="organic-sum"><span>合计</span><strong data-organic-sum>0%</strong></div></div>`)+card('选择一种熟悉的商品作比较',field('G6','请以哪类食品作为价差比较对象？','organic.referenceCategory',L.categories.map(c=>[c.id,c.name]))+`<p class="hint" style="margin-bottom:20px">以下两题均以同品类、相近规格和品质的普通产品价格为基准。例如普通产品10元、认证产品12元，价差为20%。</p>`+field('G7','你观察到认证产品通常贵多少？','organic.observedPremium',premium.map(([v,t])=>[v,v==='zero'?'没有加价（0%）':t]))+field('G8','你最高愿意接受的加价比例是？','organic.willingPremium',premium));
  if(o.aware==='yes'&&o.bought==='no')body+=card('过去30天未购买的原因',choices('organic.reasons',['不信任相关认证','不清楚认证产品的优势','价格较高','不方便买到','对口感或品质不满意','这段时间没有需求','其他'],true)+'<p class="hint">可多选。未购买的实际支出记为0，不再追问购买频率和渠道分配。</p>');
  if(o.aware==='no'||(o.aware==='yes'&&o.bought==='unknown'))body+=notice('无需估算不了解或未确认的购买情况。');
- return shell(body+`<div class="form-actions"><button class="secondary" data-go="7">← 返回核对</button><button class="primary" data-finish-organic>完成试填 <span aria-hidden="true">✓</span></button></div>`);}
+ return shell(body+`<div class="form-actions"><button class="secondary" data-go="6">← 上一步</button><button class="primary" data-finish-organic>完成试填 <span aria-hidden="true">✓</span></button></div>`);}
 function done() {
   const screenedOut = S.purchased === 'no';
   const message = screenedOut
@@ -88,22 +95,32 @@ function done() {
     : '<h1>问卷试填完成</h1><p>感谢体验。答案仅保留在当前标签页。</p>';
   const actions = screenedOut
     ? '<button class="secondary" data-go="1">返回问卷</button>'
-    : '<button class="secondary" data-go="7">核对并修改答案</button>';
+    : '<button class="secondary" data-go="8">返回修改答案</button>';
   return '<section class="completion"><div class="complete-icon" aria-hidden="true">✓</div>' + message + '<div class="review-actions">' + actions + '</div></section>';
 }
-function render(scroll=false){$('#app').innerHTML=S.step===0?welcome():S.step===1?profile():S.step===2?family():S.step===3?channels():S.step===4?matrix():S.step===5?orders():S.step===6?diet():S.step===7?review():S.step===8?organic():done();refreshStats();if(scroll)window.scrollTo({top:0,behavior:'instant'});}
+function render(scroll=false){$('#app').innerHTML=S.step===0?welcome():S.step===1?profile():S.step===2?family():S.step===3?channels():S.step===4?matrix():S.step===5?orders():S.step===6?diet():S.step===8?organic():done();refreshStats();if(scroll)window.scrollTo({top:0,behavior:'instant'});}
 function refreshStats(){if(S.step===4){for(const c of S.categories){const el=$('#sum-'+c),sum=L.shareSum(S,c),u=!!S.unknownShare[c];if(el){el.className='sum-bar '+(u?'':Math.abs(sum-100)<.001?'good':sum>100?'bad':'');el.querySelector('strong').textContent=+sum.toFixed(2)+'%';}}if($('#amount-count'))$('#amount-count').textContent=S.categories.filter(c=>L.knownAmount(S,c)).length;if($('#share-count'))$('#share-count').textContent=S.categories.filter(c=>!S.unknownShare[c]&&Math.abs(L.shareSum(S,c)-100)<.001).length;if($('#derived-table'))$('#derived-table').innerHTML=derivedTable(L.derived(S));}if(S.step===8&&$('#organic-sum')){const sum=S.channels.length===1?100:S.channels.reduce((a,h)=>a+(L.num(S.organic.shares[h])??0),0),u=S.organic.shareUnknown;$('#organic-sum strong').textContent=+sum.toFixed(2)+'%';$('#organic-sum').className='sum-bar '+(u?'':Math.abs(sum-100)<.001?'good':sum>100?'bad':'');}}
 function clean(){S.channels=L.channels.filter(x=>S.channels.includes(x.id)).map(x=>x.id);S.categories=L.categories.filter(x=>S.categories.includes(x.id)).map(x=>x.id);S.detailChannels=S.detailChannels.filter(h=>h&&S.channels.includes(h)).slice(0,2);if(S.detailChannels[0]===S.detailChannels[1])S.detailChannels.splice(1,1);if(S.channels.length===1){S.detailChannels=[S.channels[0]];for(const c of S.categories)S.unknownShare[c]=false;S.organic.shareUnknown=false;}}
-function allErrors(){return [1,2,3,4,5,6].flatMap(step=>L.validate(S,step).map(e=>({...e,step})));}
-function reachableStep(step) {
-  if (step === 9 && S.purchased !== 'no' && !S.organicCompleted) step = 8;
-  return step === 8 && !S.mainCompleted ? 7 : step;
-}
-function go(step) {
-  S.step = reachableStep(step);
+function go(step, scroll = true) {
+  if (step === 8) {
+    for (const { id } of steps) {
+      if (id === 8) break;
+      const issues = L.validate(S, id);
+      if (issues.length) {
+        showErrors(issues, id);
+        return;
+      }
+      if (id === 1 && S.purchased === 'no') {
+        step = 9;
+        break;
+      }
+    }
+    S.mainCompleted = step === 8;
+  }
+  S.step = step;
   errors = [];
   save();
-  render(true);
+  render(scroll);
 }
 function handleField(el){if(el.dataset.array){const p=el.dataset.array,v=el.value;let a=[...(get(p)||[])];a=el.checked?[...new Set([...a,v])]:a.filter(x=>x!==v);if(['profile.special','diet.special'].includes(p)){if(el.checked&&['none','private'].includes(v))a=[v];else if(el.checked)a=a.filter(x=>!['none','private'].includes(x));}put(p,a);if(['profile.special','diet.special'].includes(p))document.querySelectorAll(`[data-array="${p}"]`).forEach(n=>{n.checked=a.includes(n.value);});}else if(el.dataset.field){put(el.dataset.field,el.type==='checkbox'?el.checked:el.value);}clean();if(S.step!==8)S.mainCompleted=false;S.organicCompleted=false;save();if(el.dataset.refresh)render();else refreshStats();}
 document.addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-field]:not([type=radio]):not([type=checkbox]),textarea[data-field]'))handleField(el);});
@@ -116,20 +133,9 @@ function showErrors(issues, step) {
   $('.error-summary')?.focus();
 }
 
-function continueToOrganic() {
-  const issues = allErrors();
-  if (issues.length) {
-    const step = issues[0].step;
-    showErrors(issues.filter(issue => issue.step === step), step);
-    return;
-  }
-  S.mainCompleted = true;
-  go(8);
-}
-
 function finishPreview() {
   if (!S.mainCompleted) {
-    go(7);
+    go(8);
     return;
   }
   const issues = L.validate(S, 8);
@@ -154,10 +160,13 @@ document.addEventListener('click', event => {
     const issues = L.validate(S, S.step);
     if (issues.length) { showErrors(issues, S.step); return; }
     if (S.step === 1 && S.purchased === 'no') { go(9); return; }
-    go(S.step + 1);
+    go(S.step === 6 ? 8 : S.step + 1);
   }
-  if (button.hasAttribute('data-complete')) continueToOrganic();
   if (button.hasAttribute('data-finish-organic')) finishPreview();
 });
-S.step = reachableStep(S.step);
-render();
+// Resume drafts saved on the former review page in the final section.
+if (S.step === 7 || S.step === 8 || (S.step === 9 && S.purchased !== 'no' && !S.organicCompleted)) {
+  go(8, false);
+} else {
+  render();
+}
