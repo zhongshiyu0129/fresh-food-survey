@@ -171,6 +171,17 @@ function shoppingCosts() {
   return shell(card('过去30天，买生鲜一共花了多少时间和额外费用？', `
     <p class="hint">按 B2 的使用频率，选最常用的一到两个渠道，分别累计各渠道过去30天的投入。时间计入本人参与的挑选、下单、排队、结算和专程往返，扣除配送等待、正常通勤和做饭时间。额外费用包括配送费、包装费、服务费及专程购物的交通、停车费。</p>
     ${channelPickers}${costQuestions}`, 'B6')
+    + (S.detailChannels.length ? card('过去30天，你选择通过这些渠道购买生鲜食品，主要是出于哪些原因？',
+      '<p class="hint">沿用 B6 的常用渠道，分别选择最主要的1–3项原因。</p>'
+      + S.detailChannels.map(id => `<div class="channel-cost">
+        <h3>${esc(nameH(id))}</h3>
+        <div class="question">${label('','你选择这个渠道的主要原因（最多选3项）')}
+          ${choices('channelReasons.'+id+'.reasons',Object.entries(L.channelReasons),true,true)}
+        </div>
+        ${(get('channelReasons.'+id+'.reasons')||[]).includes('other') ? `<div class="question">
+          ${label('','请注明其他原因')}${input('channelReasons.'+id+'.other','请注明选择这个渠道的其他原因','text','','reasons-other-'+id)}
+        </div>` : ''}
+      </div>`).join(''), 'B6a') : '')
     + scaleRows('B7','过去30天，下列描述与你的情况有多符合？',[
       ['time1','我经常觉得留给购买食品的时间不够。'],
       ['time2','我经常觉得留给准备或烹饪食品的时间不够。'],
@@ -339,6 +350,11 @@ function handleField(el) {
   if (array) {
     let values = get(array) ?? [];
     values = el.checked ? [...new Set([...values,el.value])] : values.filter(value=>value!==el.value);
+    if (/^channelReasons\.[^.]+\.reasons$/.test(array) && values.length > 3) {
+      el.checked = false;
+      toast('每个渠道最多选择3项主要原因，请先取消一项再选择。');
+      return;
+    }
     if (['profile.special','diet.special'].includes(array)) {
       const exclusive = ['none','private'];
       if (el.checked && exclusive.includes(el.value)) values = [el.value];

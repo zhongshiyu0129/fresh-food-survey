@@ -72,6 +72,11 @@
       const cost = obj(obj(data.costs)[h]);
       return { time:choice(cost.time, Object.keys(L.timeBands)), fee:choice(cost.fee, Object.keys(L.feeBands)) };
     });
+    s.channelReasons = keyed(s.detailChannels, h => {
+      const answer = obj(obj(data.channelReasons)[h]);
+      const reasons = choices(answer.reasons, Object.keys(L.channelReasons));
+      return { reasons, other:reasons.includes('other') ? text(answer.other, 300) : '' };
+    });
     s.scales = keyed(Object.keys(scales), k => choice(obj(data.scales)[k], ['1','2','3','4','5']));
     const diet = obj(data.diet);
     s.diet = keyed(Object.keys(ranges), k => choice(diet[k], ranges[k].map(([code]) => code)));

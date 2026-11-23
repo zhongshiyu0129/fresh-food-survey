@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
 
-  const version = 'fresh-survey-2026-v6';
+  const version = 'fresh-survey-2026-v7';
   const channels = [
     {id:'market',name:'农贸市场',kind:'线下',icon:'▦',desc:'到菜市场、农贸集市现场购买。'},
     {id:'supermarket',name:'大型商超',kind:'线下',icon:'▤',desc:'到大型超市或综合生鲜超市现场购买。'},
@@ -30,6 +30,12 @@
     zero:'0元', under5:'大于0且不足5元', from5:'5–不足10元',
     from10:'10–不足20元', from20:'20–不足30元', from30:'30–不足50元',
     from50:'50–不足100元', from100:'100–不足200元', from200:'200元及以上',
+  };
+  const channelReasons = {
+    price:'商品价格较低', promotions:'优惠促销较多', fresh:'商品新鲜',
+    quality:'品质或食品安全更有保障', variety:'商品种类丰富',
+    activeTime:'购买方便，主动花费的时间较少', quickAccess:'能较快拿到商品',
+    selection:'方便挑选符合自己需要的商品', habit:'长期使用，已经形成习惯', other:'其他',
   };
   const certificationTypes = { organic:'有机认证', green:'绿色食品认证' };
   const premiums = {
@@ -61,7 +67,7 @@
     return {
       version, step:0, demo:false, consent:false, purchased:'', profile:{},
       channels:[], otherChannel:'', categories:[], frequency:{}, spendBands:{}, categoryChannels:{}, shares:{},
-      detailChannels:[], costs:{}, scales:{}, diet:{},
+      detailChannels:[], costs:{}, channelReasons:{}, scales:{}, diet:{},
       organic:{aware:'', bought:'', types:[], frequency:'', amountBand:'', channels:[], shares:{}, referenceCategory:'', observedPremium:'', reasons:[], reasonsOther:''},
       mainCompleted:false, organicCompleted:false, startedAt:new Date().toISOString(),
     };
@@ -93,8 +99,14 @@
 
   function migrateDraft(saved) {
     if (saved?.version === version) return saved;
+    if (saved?.version === 'fresh-survey-2026-v6') {
+      const next = { ...saved, version, channelReasons:{}, mainCompleted:false, organicCompleted:false };
+      if (next.step > 5) next.step = 5;
+      return next;
+    }
     if (['fresh-survey-2026-v4','fresh-survey-2026-v5'].includes(saved?.version)) {
-      const next = withoutRetiredAnswers(saved);
+      const next = { ...withoutRetiredAnswers(saved), channelReasons:{}, mainCompleted:false, organicCompleted:false };
+      if (next.step > 5) next.step = 5;
       // Preserve only ranges whose boundaries are unchanged; never guess a finer answer.
       next.costs = Object.fromEntries(Object.entries(saved.costs ?? {}).map(([channel, cost]) => [channel, {
         time:['from30','from60','from120'].includes(cost?.time) ? cost.time : '',
@@ -204,6 +216,14 @@
         const title = nameOf(channels, channel);
         if (!own(timeBands, cost.time)) add('time-' + channel, '请选择' + title + '的30天购物时间。');
         if (!own(feeBands, cost.fee)) add('fee-' + channel, '请选择' + title + '的30天额外费用。');
+        const reasons = s.channelReasons?.[channel]?.reasons;
+        if (!Array.isArray(reasons) || reasons.length < 1 || reasons.length > 3
+            || new Set(reasons).size !== reasons.length || reasons.some(reason => !own(channelReasons, reason))) {
+          add('reasons-' + channel, '请选择' + title + '的主要选择原因，每个渠道选1–3项。');
+        }
+        if (Array.isArray(reasons) && reasons.includes('other') && !s.channelReasons[channel]?.other?.trim()) {
+          add('reasons-other-' + channel, '请注明选择' + title + '的其他原因。');
+        }
       }
       requiredFields(s.scales, {
         time1:'采购时间评价', time2:'准备或烹饪时间评价', food1:'尝试不同食品的看法',
@@ -286,13 +306,17 @@
       monthly_shopping_costs:s.detailChannels.map(channel => ({
         channel, active_time_band:s.costs[channel]?.time ?? null, extra_fee_band:s.costs[channel]?.fee ?? null,
       })),
+      channel_choice_reasons:s.detailChannels.map(channel => ({
+        channel, reasons:[...(s.channelReasons?.[channel]?.reasons ?? [])],
+        reasons_other:s.channelReasons?.[channel]?.reasons?.includes('other') ? (s.channelReasons[channel].other ?? '').trim() : null,
+      })),
       scales:{...s.scales}, diet:{...diet, eggs_per_day_estimate:num(eggsDaily)}, organic:organicResult,
       quality:{attention_answer:s.scales.attention ?? null, attention_pass:s.scales.attention === '2', interpretation:'self_report_food_group_comparison'},
     };
   }
 
   root.SurveyLogic = {
-    version, channels, categories, monthly, timeBands, feeBands, certificationTypes, premiums, organicReasons,
+    version, channels, categories, monthly, timeBands, feeBands, channelReasons, certificationTypes, premiums, organicReasons,
     spendBands, blank, num, migrateDraft, allocation, allocationSum, validAllocation, validate, record,
   };
   if (typeof module !== 'undefined') module.exports = root.SurveyLogic;
