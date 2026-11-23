@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
 
-  const version = 'fresh-survey-2026-v7';
+  const version = 'fresh-survey-2026-v8';
   const channels = [
     {id:'market',name:'农贸市场',kind:'线下',icon:'▦',desc:'到菜市场、农贸集市现场购买。'},
     {id:'supermarket',name:'大型商超',kind:'线下',icon:'▤',desc:'到大型超市或综合生鲜超市现场购买。'},
@@ -22,14 +22,12 @@
     '1to2':'1–2次', '3to5':'3–5次', '6to10':'6–10次', '11to20':'11–20次', '21plus':'21次及以上',
   };
   const timeBands = {
-    under15:'不足15分钟', from15:'15–不足30分钟', from30:'30–不足60分钟',
-    from60:'60–不足120分钟', from120:'120–不足240分钟', from240:'240–不足480分钟',
-    from480:'480–不足720分钟', from720:'720–不足1200分钟', from1200:'1200分钟及以上',
+    under5:'不足5分钟', from5:'5–不足10分钟', from10:'10–不足20分钟',
+    from20:'20–不足30分钟', from30:'30–不足60分钟', from60:'60分钟及以上',
   };
   const feeBands = {
-    zero:'0元', under5:'大于0且不足5元', from5:'5–不足10元',
-    from10:'10–不足20元', from20:'20–不足30元', from30:'30–不足50元',
-    from50:'50–不足100元', from100:'100–不足200元', from200:'200元及以上',
+    zero:'0元', under3:'大于0且不足3元', from3:'3–不足5元',
+    from5:'5–不足10元', from10:'10元及以上',
   };
   const channelReasons = {
     price:'商品价格较低', promotions:'优惠促销较多', fresh:'商品新鲜',
@@ -99,23 +97,12 @@
 
   function migrateDraft(saved) {
     if (saved?.version === version) return saved;
-    if (saved?.version === 'fresh-survey-2026-v6') {
-      const next = { ...saved, version, channelReasons:{}, mainCompleted:false, organicCompleted:false };
+    if (['fresh-survey-2026-v4','fresh-survey-2026-v5','fresh-survey-2026-v6','fresh-survey-2026-v7'].includes(saved?.version)) {
+      // Monthly totals cannot be reinterpreted as average-per-purchase answers.
+      const next = { ...withoutRetiredAnswers(saved), costs:{},
+        channelReasons:saved.version === 'fresh-survey-2026-v7' ? (saved.channelReasons ?? {}) : {},
+        mainCompleted:false, organicCompleted:false };
       if (next.step > 5) next.step = 5;
-      return next;
-    }
-    if (['fresh-survey-2026-v4','fresh-survey-2026-v5'].includes(saved?.version)) {
-      const next = { ...withoutRetiredAnswers(saved), channelReasons:{}, mainCompleted:false, organicCompleted:false };
-      if (next.step > 5) next.step = 5;
-      // Preserve only ranges whose boundaries are unchanged; never guess a finer answer.
-      next.costs = Object.fromEntries(Object.entries(saved.costs ?? {}).map(([channel, cost]) => [channel, {
-        time:['from30','from60','from120'].includes(cost?.time) ? cost.time : '',
-        fee:cost?.fee === 'zero' ? 'zero' : '',
-      }]));
-      if (next.detailChannels?.some(channel => !next.costs[channel]?.time || !next.costs[channel]?.fee)) {
-        next.mainCompleted = false;
-        if (next.step > 5) next.step = 5;
-      }
       return next;
     }
     const next = blank();
@@ -214,8 +201,8 @@
       for (const channel of s.detailChannels) {
         const cost = s.costs[channel] ?? {};
         const title = nameOf(channels, channel);
-        if (!own(timeBands, cost.time)) add('time-' + channel, '请选择' + title + '的30天购物时间。');
-        if (!own(feeBands, cost.fee)) add('fee-' + channel, '请选择' + title + '的30天额外费用。');
+        if (!own(timeBands, cost.time)) add('time-' + channel, '请选择' + title + '的平均每次购物时间。');
+        if (!own(feeBands, cost.fee)) add('fee-' + channel, '请选择' + title + '的平均每次额外费用。');
         const reasons = s.channelReasons?.[channel]?.reasons;
         if (!Array.isArray(reasons) || reasons.length < 1 || reasons.length > 3
             || new Set(reasons).size !== reasons.length || reasons.some(reason => !own(channelReasons, reason))) {
@@ -303,7 +290,8 @@
       channels_used:[...s.channels], other_channel:s.channels.includes('other') ? s.otherChannel : null,
       categories_purchased:[...s.categories], category_spending:categorySpending, category_channel_matrix:matrix,
       channel_purchase_frequency:Object.fromEntries(s.channels.map(id => [id, s.frequency[id] ?? null])),
-      monthly_shopping_costs:s.detailChannels.map(channel => ({
+      average_shopping_costs:s.detailChannels.map(channel => ({
+        reference_period_days:30, basis:'per_purchase',
         channel, active_time_band:s.costs[channel]?.time ?? null, extra_fee_band:s.costs[channel]?.fee ?? null,
       })),
       channel_choice_reasons:s.detailChannels.map(channel => ({

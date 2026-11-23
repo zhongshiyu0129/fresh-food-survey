@@ -28,7 +28,7 @@ const steps = [
   { id: 2, title: '家庭与生活环境', description: '帮助我们理解不同家庭的采购与饮食背景。' },
   { id: 3, title: '购买渠道与品类', description: '勾选过去30天实际使用过的渠道和买过的品类。' },
   { id: 4, title: '品类与渠道分配', description: '按品类选择金额区间，再填写实际使用的渠道。' },
-  { id: 5, title: '购物成本与感受', description: '回忆过去30天最常用渠道的购物时间和额外费用。' },
+  { id: 5, title: '购物成本与感受', description: '回忆过去30天最常用渠道平均每次购物的时间和额外费用。' },
   { id: 6, title: '近7天的饮食', description: '包括在家、餐馆、外卖和食堂中吃到的食物。' },
   { id: 8, title: '有机与绿色食品', description: '请回答以下与你的情况相关的题目。' },
 ];
@@ -164,12 +164,12 @@ function shoppingCosts() {
   const costQuestions = S.detailChannels.map(id => `<div class="channel-cost">
     <h3>${esc(nameH(id))}</h3>
     <div class="fields">
-      ${field('','购物时间合计','costs.'+id+'.time',Object.entries(L.timeBands))}
-      ${field('','额外费用合计','costs.'+id+'.fee',Object.entries(L.feeBands))}
+      ${field('','平均每次购物时间','costs.'+id+'.time',Object.entries(L.timeBands))}
+      ${field('','平均每次额外费用','costs.'+id+'.fee',Object.entries(L.feeBands))}
     </div>
   </div>`).join('');
-  return shell(card('过去30天，买生鲜一共花了多少时间和额外费用？', `
-    <p class="hint">按 B2 的使用频率，选最常用的一到两个渠道，分别累计各渠道过去30天的投入。时间计入本人参与的挑选、下单、排队、结算和专程往返，扣除配送等待、正常通勤和做饭时间。额外费用包括配送费、包装费、服务费及专程购物的交通、停车费。</p>
+  return shell(card('回忆过去30天，在常用渠道买生鲜，平均每次花多少时间和额外费用？', `
+    <p class="hint">按 B2 的使用频率选最常用的一到两个渠道，分别估算各渠道平均每次购物的投入；只买过一次就按那次作答。时间计入本人参与的挑选、下单、排队、结算和专程往返，不含配送等待、正常通勤和做饭时间。额外费用包括配送、包装、服务费及专程购物的交通、停车费，不含商品价款。</p>
     ${channelPickers}${costQuestions}`, 'B6')
     + (S.detailChannels.length ? card('过去30天，你选择通过这些渠道购买生鲜食品，主要是出于哪些原因？',
       '<p class="hint">沿用 B6 的常用渠道，分别选择最主要的1–3项原因。</p>'
