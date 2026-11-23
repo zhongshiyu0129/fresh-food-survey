@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
 
-  const version = 'fresh-survey-2026-v5';
+  const version = 'fresh-survey-2026-v6';
   const channels = [
     {id:'market',name:'农贸市场',kind:'线下',icon:'▦',desc:'到菜市场、农贸集市现场购买。'},
     {id:'supermarket',name:'大型商超',kind:'线下',icon:'▤',desc:'到大型超市或综合生鲜超市现场购买。'},
@@ -22,12 +22,14 @@
     '1to2':'1–2次', '3to5':'3–5次', '6to10':'6–10次', '11to20':'11–20次', '21plus':'21次及以上',
   };
   const timeBands = {
-    under30:'不足30分钟', from30:'30–不足60分钟', from60:'60–不足120分钟',
-    from120:'120–不足240分钟', from240:'240分钟及以上',
+    under15:'不足15分钟', from15:'15–不足30分钟', from30:'30–不足60分钟',
+    from60:'60–不足120分钟', from120:'120–不足240分钟', from240:'240–不足480分钟',
+    from480:'480–不足720分钟', from720:'720–不足1200分钟', from1200:'1200分钟及以上',
   };
   const feeBands = {
-    zero:'0元', under10:'大于0且不足10元', from10:'10–不足30元',
-    from30:'30–不足60元', from60:'60元及以上',
+    zero:'0元', under5:'大于0且不足5元', from5:'5–不足10元',
+    from10:'10–不足20元', from20:'20–不足30元', from30:'30–不足50元',
+    from50:'50–不足100元', from100:'100–不足200元', from200:'200元及以上',
   };
   const certificationTypes = { organic:'有机认证', green:'绿色食品认证' };
   const premiums = {
@@ -91,7 +93,19 @@
 
   function migrateDraft(saved) {
     if (saved?.version === version) return saved;
-    if (saved?.version === 'fresh-survey-2026-v4') return withoutRetiredAnswers(saved);
+    if (['fresh-survey-2026-v4','fresh-survey-2026-v5'].includes(saved?.version)) {
+      const next = withoutRetiredAnswers(saved);
+      // Preserve only ranges whose boundaries are unchanged; never guess a finer answer.
+      next.costs = Object.fromEntries(Object.entries(saved.costs ?? {}).map(([channel, cost]) => [channel, {
+        time:['from30','from60','from120'].includes(cost?.time) ? cost.time : '',
+        fee:cost?.fee === 'zero' ? 'zero' : '',
+      }]));
+      if (next.detailChannels?.some(channel => !next.costs[channel]?.time || !next.costs[channel]?.fee)) {
+        next.mainCompleted = false;
+        if (next.step > 5) next.step = 5;
+      }
+      return next;
+    }
     const next = blank();
     if (saved?.version !== 'fresh-survey-2026-v3') return next;
 
